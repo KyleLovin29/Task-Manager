@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const { Task, validate } = require("../models/task");
 const express = require("express");
 const router = express.Router();
 
@@ -6,18 +6,6 @@ mongoose
   .connect("mongodb://localhost/task-manager")
   .then(() => console.log("Connected to MongoDB..."))
   .catch((err) => console.error("Could not connect to MongoDB...", err));
-
-const taskSchema = new mongoose.Schema({
-  Title: String,
-  Task: String,
-  AdditionalInfo: String,
-  Category: String,
-  Tags: [String],
-  Severity: Number,
-  Completed: Boolean,
-});
-
-const Task = mongoose.model("Tasks", taskSchema);
 
 router.get("/", (req, res) => {
   async function getTasks() {
