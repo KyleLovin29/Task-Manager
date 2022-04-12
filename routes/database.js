@@ -2,71 +2,63 @@ const { Task, validate } = require("../models/task");
 const express = require("express");
 const router = express.Router();
 
-mongoose
-  .connect("mongodb://localhost/task-manager")
-  .then(() => console.log("Connected to MongoDB..."))
-  .catch((err) => console.error("Could not connect to MongoDB...", err));
-
-router.get("/", (req, res) => {
-  async function getTasks() {
-    const tasks = await Task.find();
-    console.log(tasks);
-  }
-  getTasks();
+router.get("/", async (req, res) => {
+  const tasks = await Task.find();
+  res.send(tasks);
 });
 
-router.get("/:id", (req, res) => {
-  async function getTask(id) {
-    const task = await Task.findById(id);
-    console.log(task);
-  }
-  getTask(req.params.id);
+router.get("/:id", async (req, res) => {
+  const task = await Task.findById(req.params.id);
+
+  if (!task)
+    return res.status(404).send("The task with the given ID cannot be found");
+
+  res.send(task);
 });
 
-router.post("/", (req, res) => {
-  async function createTask() {
-    const task = new Task({
-      Title: "Lunch",
-      Task: "Go the to store",
-      AdditionalInfo: "Get bread",
-      Category: "Food",
-      Tags: ["sandwiches", "lunch"],
-      Severity: 1,
-      Completed: false,
-    });
+router.post("/", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
 
-    const result = await task.save();
-    console.log(result);
-  }
-  createTask();
+  let task = new Task({
+    Title: req.body.Title,
+    Task: req.body.Task,
+    AdditionalInfo: req.body.AdditionalInfo,
+    Category: req.body.Category,
+    Tags: req.body.Tags,
+    Severity: req.body.Severity,
+    Completed: req.body.Completed,
+  });
+  task = await task.save();
+  res.send(task);
 });
 
-router.put("/:id", (req, res) => {
-  async function updateTask(id) {
-    const task = await Task.findById(id);
-    if (!task) return;
+router.put("/:id", async (req, res) => {
+  const error = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
 
-    task.Title = "Movie";
-    task.Task = "Go to movies";
-    task.AdditionalInfo = "";
-    task.Category = "Entertainment";
-    task.Tags = ["6:30"];
-    task.Severity = 3;
-    task.Completed = true;
+  const currentTask = await Task.findByIdAndUpdate(req.params.id, {
+    Title: req.body.Title,
+    Task: req.body.Task,
+    AdditionalInfo: req.body.AdditionalInfo,
+    Category: req.body.Category,
+    Tags: req.body.Tags,
+    Severity: req.body.Severity,
+    Completed: req.body.Completed,
+  });
 
-    const result = await task.save();
-    console.log(result);
-  }
-  updateTask(req.params.id);
+  if (!task)
+    return res.status(404).send("The task with the given ID cannot be found");
+
+  res.send(currentTask);
 });
-router.delete("/:id", (req, res) => {
-  async function deleteTask(id) {
-    const result = await Task.deleteOne({ _id: id });
-    if (!result) return;
+router.delete("/:id", async (req, res) => {
+  const task = await Task.findByIdAndRemove(req.params.id);
 
-    console.log(result);
-  }
-  deleteTask(req.params.id);
+  if (!task)
+    return res.status(404).send("The task with the given ID cannot be found");
+
+  res.send(task);
 });
 
 module.exports = router;
