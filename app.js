@@ -1,10 +1,19 @@
 // const Logger = require('./middleware/logger');
+const config = require("config");
 const mongoose = require("mongoose");
 const express = require("express");
+const users = require("./routes/users");
 const tasks = require("./routes/tasks");
 const database = require("./routes/database");
+const auth = require("./routes/auth");
 const app = express();
 // const logger = new Logger();
+
+if (!config.get("jwtPrivateKey")) {
+  console.error("FATAL ERROR: jwtPrivateKey is not defined.");
+  process.exit(1);
+}
+
 mongoose
   .connect("mongodb://localhost/task-manager")
   .then(() => console.log("Connected to MongoDB..."))
@@ -12,7 +21,9 @@ mongoose
 
 app.use(express.json());
 app.use("/api/tasks/inmemory", tasks);
-app.use("/api/tasks/", database);
+app.use("/api/tasks/", tasks);
+app.use("/api/users", users);
+app.use("/api/auth", auth);
 
 // logger.on('logEvent', (arg) => {
 //     console.log('Sending log to task-log.txt', arg)

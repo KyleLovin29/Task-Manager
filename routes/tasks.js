@@ -1,67 +1,65 @@
+const auth = require("../middleware/auth");
+const { Task, validate } = require("../models/task");
 const express = require("express");
-const Joi = require("joi");
 const router = express.Router();
 
-const tasks = [];
-
-router.get("/", (req, res) => {
-  setTimeout(() => {
-    if (tasks.length === 0) return res.send("You have no tasks.");
-    res.send(tasks);
-  }, 500);
-});
-router.get("/:id", (req, res) => {
-  setTimeout(() => {
-    const currentTask = tasks.find((c) => c.id === parseInt(req.params.id));
-    res.send(currentTask);
-  }, 500);
+router.get("/", auth, async (req, res) => {
+  const tasks = await Task.find();
+  res.send(tasks);
 });
 
-router.post("/", (req, res) => {
-  setTimeout(() => {
-    const error = validateTask(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+router.get("/:id", auth, async (req, res) => {
+  const task = await Task.findById(req.params.id);
 
-    const task = {
-      id: tasks.length + 1,
-      task: req.body.task,
-    };
+  if (!task)
+    return res.status(404).send("The task with the given ID cannot be found");
 
-    tasks.push(task);
-    res.send(tasks);
-  }, 500);
+  res.send(task);
 });
 
-router.put("/:id", (req, res) => {
-  setTimeout(() => {
-    const currentTask = tasks.find((c) => c.id === parseInt(req.params.id));
+router.post("/", auth, async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
 
-    const error = validateTask(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    currentTask.task = req.body.task;
-    res.send(tasks);
-  }, 500);
+  let task = new Task({
+    Title: req.body.Title,
+    Task: req.body.Task,
+    AdditionalInfo: req.body.AdditionalInfo,
+    Category: req.body.Category,
+    Tags: req.body.Tags,
+    Severity: req.body.Severity,
+    Completed: req.body.Completed,
+  });
+  task = await task.save();
+  res.send(task);
 });
 
-router.delete("/:id", (req, res) => {
-  setTimeout(() => {
-    const currentTask = tasks.find((c) => c.id === parseInt(req.params.id));
+router.put("/:id", auth, async (req, res) => {
+  const error = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
 
-    const index = tasks.indexOf(currentTask);
-    tasks.splice(index, 1);
+  const currentTask = await Task.findByIdAndUpdate(req.params.id, {
+    Title: req.body.Title,
+    Task: req.body.Task,
+    AdditionalInfo: req.body.AdditionalInfo,
+    Category: req.body.Category,
+    Tags: req.body.Tags,
+    Severity: req.body.Severity,
+    Completed: req.body.Completed,
+  });
 
-    res.send(tasks);
-  }, 500);
+  if (!task)
+    return res.status(404).send("The task with the given ID cannot be found");
+
+  res.send(currentTask);
 });
+router.delete("/:id", auth, async (req, res) => {
+  const task = await Task.findByIdAndRemove(req.params.id);
 
-function validateTask(task) {
-  setTimeout(() => {
-    const JoiSchema = Joi.object({
-      task: Joi.string().min(2).required(),
-    });
-    return JoiSchema.validate(task);
-  }, 500);
-}
+  if (!task)
+    return res.status(404).send("The task with the given ID cannot be found");
+
+  res.send(task);
+});
 
 module.exports = router;
