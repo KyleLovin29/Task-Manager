@@ -42,11 +42,12 @@ const Task = mongoose.model(
       type: Boolean,
       default: false,
     },
+    Hidden: Boolean,
   })
 );
 
 function validateTask(task) {
-  const JoiSchema = Joi.object({
+  const schema = Joi.object({
     Title: Joi.string().required(),
     Task: Joi.string().max(25).required(),
     AdditionalInfo: Joi.string().max(250),
@@ -55,7 +56,7 @@ function validateTask(task) {
     Severity: Joi.string(),
     Completed: Joi.boolean(),
   });
-  return JoiSchema.validate(task);
+  return schema.validate(task);
 }
 
 exports.Task = Task;
