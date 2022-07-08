@@ -2,9 +2,10 @@
 const config = require("config");
 const mongoose = require("mongoose");
 const express = require("express");
+const cors = require("cors");
 const users = require("./routes/users");
 const tasks = require("./routes/tasks");
-const database = require("./routes/database");
+const severity = require("./routes/severities");
 const auth = require("./routes/auth");
 const app = express();
 // const logger = new Logger();
@@ -20,8 +21,10 @@ mongoose
   .catch((err) => console.error("Could not connect to MongoDB...", err));
 
 app.use(express.json());
-app.use("/api/tasks/inmemory", tasks);
-app.use("/api/tasks/", tasks);
+app.use(cors());
+// app.use("/api/tasks/inmemory", mockService);
+app.use("/api/severity", severity);
+app.use("/api/tasks", tasks);
 app.use("/api/users", users);
 app.use("/api/auth", auth);
 
@@ -31,5 +34,5 @@ app.use("/api/auth", auth);
 
 // logger.taskLog('test\n');
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3100;
 app.listen(port, () => console.log(`Listening on port ${port}. . .`));

@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
+const { severitySchema } = require("./severity");
 
 const Task = mongoose.model(
-  "Task",
+  "Tasks",
   new mongoose.Schema({
     Title: {
       type: String,
@@ -34,9 +35,8 @@ const Task = mongoose.model(
       required: true,
     },
     Severity: {
-      type: String,
-      enum: ["Normal", "Important", "Very Important"],
-      required: false,
+      type: severitySchema,
+      required: true,
     },
     Completed: {
       type: Boolean,
@@ -52,8 +52,8 @@ function validateTask(task) {
     Task: Joi.string().max(25).required(),
     AdditionalInfo: Joi.string().max(250),
     Category: Joi.string().min(3).required(),
+    severityId: Joi.string().required(),
     Tags: Joi.array().required(),
-    Severity: Joi.string(),
     Completed: Joi.boolean(),
   });
   return schema.validate(task);
